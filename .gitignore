@@ -1,0 +1,38 @@
+# API Keys and Secrets
+*.env
+.env
+*_API_KEY*
+
+# Large Data Files - DON'T push to GitHub
+*.csv
+*.jsonl
+*.json
+*.ndjson
+
+# Specific data files
+tripadvisor_hotel_reviews.csv
+ai_generated_tripadvisor_reviews_gemma3_4b.csv
+reviews_human_ai_combined.csv
+combined_reviews_labeled.csv
+ai_hotel_reviews_gemini.csv
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Model files
+*.pkl
+*.joblib
+*.h5
+
+# OS files
+.DS_Store
+
+# Virtual environments
+venv/
+env/
