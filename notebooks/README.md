@@ -5,44 +5,41 @@
 
 ## Overview
 
-Detecting AI-generated hotel reviews using stylometric features and a multi-step LangChain pipeline.
+This project investigates whether a stylometry-based, feature-driven detector can distinguish AI-generated hotel reviews from human-written reviews more reliably and transparently than a single-pass prompting-only LLM baseline. Our system is designed as a multi-step LangChain-style pipeline: a review is converted into stylometric features, scored by a trained classifier, calibrated into a 0–100 AI-likeness score, and then explained using evidence grounded in the extracted features.
 
 ## Research Question
 
 Can a stylometry-based, feature-driven detector with structured outputs produce more reliable AI-vs-human review detection and clearer evidence-based explanations than a single-pass prompting-only LLM baseline?
 
-## Project Structure
+## Repository Structure
+
 ```
-DS301_AI_Review_Detector/
-├── README.md                    # This file
-├── requirements.txt             # Python dependencies
-├── .gitignore                   # Git ignore rules
-├── Project.ipynb                # Main project notebook
+ds301-project-group25/
+├── README.md                          # Main project overview and setup instructions
+├── requirements.txt                   # Python dependencies
+├── .gitignore                         # Git ignore rules
 │
-└── Data files (NOT on GitHub - too large):
-    ├── tripadvisor_hotel_reviews.csv              (~15MB - human reviews)
-    └── ai_generated_tripadvisor_reviews_gemma3_4b.csv  (~7MB - AI reviews)
+├── models/                            # Saved model artifacts
+│   ├── baseline_results.pkl           # Week 2 baseline evaluation results
+│   ├── lr_classifier.pkl              # Logistic regression classifier
+│   ├── lr_temp_scaler.pkl             # Logistic regression temperature scaler
+│   ├── rf_classifier.pkl              # Random forest classifier
+│   ├── rf_temp_scaler.pkl             # Random forest temperature scaler
+│   └── week3_artifacts.pkl            # Week 3 saved outputs and metadata
+│
+├── notebooks/                         # Development notebooks
+│   ├── AI_Review_Detector_Week1_3_Complete.ipynb   # Main Weeks 1–3 implementation notebook
+│   ├── ai_review_generation_and_eda.ipynb          # AI review generation + proposal EDA notebook
+│   ├── data_preparation.ipynb                      # Dataset cleaning and preprocessing
+│   ├── evaluate_baseline.ipynb                     # Baseline evaluation notebook
+│   └── README.md                                   # Notes about notebook contents
+│
+├── src/                               # Python source code
+│   ├── baseline_detector.py           # Week 2 prompting-only baseline logic
+│   └── stylometry_features.py         # Stylometric feature extraction code
+│
+└── Data files (not uploaded to GitHub):
+    ├── tripadvisor_hotel_reviews.csv
+    └── ai_generated_tripadvisor_reviews_gemma3_4b.csv
+
 ```
-
-## Setup Instructions
-
-1. Clone this repository
-2. Install dependencies: `pip install -r requirements.txt`
-3. Download datasets separately (see proposal for sources)
-4. Set OpenAI API key in environment
-
-## Weekly Progress
-
-- ✓ Week 1: Project setup, data collection (10,000 AI reviews generated)
-- □ Week 2: Baseline LLM detector implementation
-- □ Week 3: Classifier training and calibration  
-- □ Week 4: Full LangChain pipeline
-- □ Week 5: Evaluation and analysis
-
-## References
-
-See `Project_Proposal.pdf` for full methodology, literature review, and implementation details.
-
----
-
-**Note**: Large data files (CSV) are excluded from this repository. Team members should download datasets separately.
