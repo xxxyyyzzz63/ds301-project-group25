@@ -43,3 +43,31 @@ ds301-project-group25/
     └── ai_generated_tripadvisor_reviews_gemma3_4b.csv
 
 ```
+
+## Setup Instructions:
+
+1. Clone this repository.
+2. Install dependencies: pip install -r requirements.txt
+3. Download the dataset files separately and place them in your working directory:
+- tripadvisor_hotel_reviews.csv
+- ai_generated_tripadvisor_reviews_gemma3_4b.csv
+4. Set your API key as an environment variable or notebook secret, depending on how you are running the code.
+
+## Notebooks
+
+- notebooks/ai_review_generation_and_eda.ipynb: used to generate AI reviews and produce EDA figures for the proposal
+- notebooks/AI_Review_Detector_Week1_3_Complete.ipynb: main milestone notebook for Weeks 1–3 implementation
+- notebooks/data_preparation.ipynb: dataset cleaning and preprocessing
+- notebooks/evaluate_baseline.ipynb: baseline evaluation experiments
+
+## References
+
+See the project proposal for the full methodology, literature review, planned pipeline design, and evaluation rationale.
+
+## Notes
+
+- Large CSV data files are not uploaded to GitHub.
+- Model .pkl files are included because later stages of the project load trained classifiers and calibration artifacts from them.
+- The repository currently reflects milestone progress through Week 3 rather than the final fully integrated chat application.
+
+
