@@ -13,7 +13,7 @@ Can a stylometry-based, feature-driven detector with structured outputs produce 
 
 ## Repository Structure
 
-```
+```text
 ds301-project-group25/
 ├── README.md                          # Main project overview and setup instructions
 ├── requirements.txt                   # Python dependencies
