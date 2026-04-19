@@ -1,4 +1,3 @@
-import io
 import json
 import pickle
 from pathlib import Path
@@ -40,7 +39,9 @@ class FinalDetectionOutput(BaseModel):
     ai_probability: float = Field(ge=0.0, le=1.0)
     ai_likeness_score: int = Field(ge=0, le=100)
     uncertainty_band: Literal[
-        "likely human-written", "uncertain", "likely AI-generated"
+        "likely human-written",
+        "uncertain",
+        "likely AI-generated",
     ]
     predicted_label: Literal["Human", "AI"]
     top_features: Dict[str, float] = Field(
@@ -128,7 +129,7 @@ class FinalReviewDetector:
         if model_name is None:
             model_name = self.selected_model_name
 
-        feature_vector_df = pd.DataFrame([features])[self.feature_columns]
+        feature_vector = pd.DataFrame([features])[self.feature_columns]
 
         if model_name == "logistic_regression":
             clf = self.lr_classifier
@@ -200,7 +201,8 @@ class FinalReviewDetector:
         use_calibration: bool = True,
     ) -> FinalDetectionOutput:
         filtered_features = {
-            col: float(extracted_features.get(col, 0.0)) for col in self.feature_columns
+            col: float(extracted_features.get(col, 0.0))
+            for col in self.feature_columns
         }
 
         classifier_output = self.run_classifier_on_features(
