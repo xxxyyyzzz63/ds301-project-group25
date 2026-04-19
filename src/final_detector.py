@@ -129,7 +129,6 @@ class FinalReviewDetector:
             model_name = self.selected_model_name
 
         feature_vector_df = pd.DataFrame([features])[self.feature_columns]
-        feature_vector = feature_vector_df.to_numpy()
 
         if model_name == "logistic_regression":
             clf = self.lr_classifier
