@@ -1,3 +1,4 @@
+import io
 import json
 import pickle
 from pathlib import Path
@@ -6,6 +7,28 @@ from typing import Dict, Literal
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field
+
+
+class TemperatureScalerFit:
+    def __init__(self):
+        self.temperature = 1.0
+
+    def fit(self, probs, true_labels):
+        return self
+
+    def predict_proba(self, probs):
+        probs = np.asarray(probs, dtype=float)
+        eps = 1e-12
+        logits = np.log((probs + eps) / (1 - probs + eps))
+        scaled = 1 / (1 + np.exp(-(logits / self.temperature)))
+        return np.clip(scaled, 0.0, 1.0)
+
+
+class ArtifactUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if module == "__main__" and name == "TemperatureScalerFit":
+            return TemperatureScalerFit
+        return super().find_class(module, name)
 
 
 class FinalDetectionOutput(BaseModel):
@@ -41,7 +64,7 @@ class FinalReviewDetector:
             )
 
         with open(self.artifact_path, "rb") as f:
-            artifacts = pickle.load(f)
+            artifacts = ArtifactUnpickler(f).load()
 
         self.feature_columns = artifacts["feature_columns"]
         self.lr_classifier = artifacts["lr_classifier"]
@@ -49,8 +72,6 @@ class FinalReviewDetector:
         self.lr_temp_scaler = artifacts["lr_temp_scaler"]
         self.rf_temp_scaler = artifacts["rf_temp_scaler"]
         self.selected_model_name = artifacts["selected_model_name"]
-
-        # Optional comparison data
         self.comparison_df = artifacts.get("comparison_df", None)
 
     @staticmethod
@@ -219,5 +240,4 @@ class FinalReviewDetector:
         return json.loads(result.model_dump_json())
 
 
-# Optional convenience singleton
 detector = FinalReviewDetector()
