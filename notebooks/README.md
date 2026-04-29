@@ -39,6 +39,8 @@ ds301-project-group25/
 │   ├── week3_artifacts.pkl
 │   ├── diverse_week5_artifacts.pkl
 │   └── updated_week4_week5_outputs.pkl
+│   ├── subgroup_analysis_outputs.pkl
+│   └── dataset_audit_outputs.pkl
 │
 ├── notebooks/
 │   ├── AI_Review_Detector_Week1_3_Complete.ipynb
@@ -47,6 +49,8 @@ ds301-project-group25/
 │   ├── evaluate_baseline.ipynb
 │   ├── week4_week5_updated_with_diverse_data.ipynb
 │   ├── detector_sanity_check.ipynb
+│   ├── subgroup_analysis_by_length.ipynb
+│   ├── dataset_audit_and_shortcut_analysis.ipynb
 │   └── README.md
 │
 ├── src/
@@ -75,6 +79,9 @@ ds301-project-group25/
 - notebooks/evaluate_baseline.ipynb: Week 2 prompting-only baseline evaluation notebook.
 - notebooks/week4_week5_updated_with_diverse_data.ipynb: Updated Week 4 to 5 notebook that loads the final diversified-data artifact, reruns the explanation-chain demo, and reports updated evaluation and subgroup analysis.
 - notebooks/detector_sanity_check.ipynb: Simple end-to-end detector loading and testing notebook for final integration checks.
+- notebooks/subgroup_analysis_by_length.ipynb: Week 5 subgroup analysis splitting the test set into short (<79 words) and long (≥79 words) reviews. Reports per-subgroup accuracy, precision, recall, F1, confusion matrices, score separation plots, calibration quality (Brier score, log loss), and uncertain-band activation. Loads predictions directly from `updated_week4_week5_outputs.pkl` so no retraining is needed.
+- notebooks/dataset_audit_and_shortcut_analysis.ipynb: Follow-up audit addressing the duplicate/shortcut concern flagged in Milestone 2. Quantifies train/val/test leakage, generator-style boilerplate prefixes in the AI dataset, calibrated-probability saturation, and per-opening detection accuracy. Synthesizes the findings to interpret the perfect F1 score responsibly.
+
 
 ## Source Code
 - src/baseline_detector.py: Prompting-only baseline logic from the earlier project stage.
@@ -86,6 +93,9 @@ The repository keeps both earlier and final artifacts:
 - earlier milestone artifacts are preserved to document project development
 - diverse_week5_artifacts.pkl is the main final artifact for the updated detector
 - updated_week4_week5_outputs.pkl stores the updated Week 4 to 5 evaluation outputs
+- subgroup_analysis_outputs.pkl stores the saved tables (per-subgroup metrics, band activation, calibration quality, errors) from the subgroup analysis notebook
+- dataset_audit_outputs.pkl stores the leakage, boilerplate, saturation, and per-opening tables from the audit notebook
+
 
 ## References
 See the project proposal and milestone materials for the full methodology, literature review, planned pipeline design, and evaluation rationale.
@@ -97,5 +107,6 @@ See the project proposal and milestone materials for the full methodology, liter
 - Earlier notebooks reflect the original synthetic AI dataset workflow.
 - The updated final detector uses a more diversified AI review dataset created to reduce repetitive generation patterns and make evaluation more realistic.
 - Even in the updated workflow, results should still be interpreted cautiously because synthetic AI reviews may retain residual cues that make them easier to separate than real-world mixed-origin text.
+- a Week 5 subgroup analysis by review length and a follow-up dataset audit that quantifies leakage, boilerplate openings, and probability saturation
 
 
