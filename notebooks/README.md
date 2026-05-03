@@ -19,7 +19,7 @@ The repository now includes:
 - the integrated Week 4 explanation-chain style detector workflow (LangChain `RunnableLambda` chain)
 - the Week 5 evaluation and subgroup analysis
 - an updated final detector trained on a more diversified AI-generated review dataset
-- a Milestone 3 dataset audit, a clean retrain on a label-wise deduplicated split, and a hybrid stylometry + TF-IDF stress test
+- a dataset audit, a clean retrain on a label-wise deduplicated split, and a hybrid stylometry + TF-IDF stress test
 - a reusable `FinalReviewDetector` Python class for testing chat-style review inputs
 - an end-to-end demo notebook (`notebooks/final_demo.ipynb`)
 
@@ -112,12 +112,12 @@ ds301-project-group25/
 - `notebooks/week4_week5_explanation_chain_and_audit.ipynb`: Week 4 to 5 notebook combining the LangChain runnable explanation chain with the original-data Week 5 evaluation, the leakage / duplication / boilerplate audit, the clean retrain on the deduplicated split, and the hybrid stylometry + character/word TF-IDF stress test.
 - `notebooks/week4_week5_updated_with_diverse_data.ipynb`: Updated Week 4 to 5 notebook that loads the diversified-data artifact, reruns the explanation-chain demo, and reports updated evaluation and subgroup analysis.
 - `notebooks/subgroup_analysis_by_length.ipynb`: Subgroup analysis splitting the test set into short (<79 words) and long (≥79 words) reviews. Reports per-subgroup accuracy, precision, recall, F1, confusion matrices, score separation plots, calibration quality (Brier score, log loss), and uncertain-band activation. Loads predictions from `updated_week4_week5_outputs.pkl` so no retraining is needed.
-- `notebooks/dataset_audit_and_shortcut_analysis.ipynb`: Milestone 3 follow-up audit. Quantifies train/val/test leakage, generator-style boilerplate prefixes in the AI dataset, calibrated-probability saturation, and per-opening detection accuracy. Synthesises the findings to interpret the perfect F1 score responsibly.
-- `notebooks/detector_sanity_check.ipynb`: Simple end-to-end detector loading and testing notebook for final integration checks (Milestone 3).
+- `notebooks/dataset_audit_and_shortcut_analysis.ipynb`: Quantifies train/val/test leakage, generator-style boilerplate prefixes in the AI dataset, calibrated-probability saturation, and per-opening detection accuracy. Synthesises the findings to interpret the perfect F1 score responsibly.
+- `notebooks/detector_sanity_check.ipynb`: Simple end-to-end detector loading and testing notebook for final integration checks.
 - `notebooks/final_demo.ipynb`: Cleaned end-to-end demo of the final detector on seven curated reviews — clear AI, AI with prompt echo, short AI, lowercased human, long sentence-cased human, ambiguous mixed, and the OOD failure case from the sanity check. Loads `src/final_detector.py` directly and works whether you launch jupyter from the repo root or from `notebooks/`.
 
 ## Source Code
-- `src/baseline_detector.py`: Prompting-only baseline detector (Week 2). LangChain `LLMChain` over a few-shot chain-of-thought prompt; exposes `BaselineDetector` and an `AIDetectionResult` Pydantic schema.
+- `src/baseline_detector.py`: Prompting-only baseline detector. LangChain `LLMChain` over a few-shot chain-of-thought prompt; exposes `BaselineDetector` and an `AIDetectionResult` Pydantic schema.
 - `src/stylometry_features.py`: Stylometric feature extractor. Single function `extract_stylometry_features(text)` returning the 14-feature dict in the canonical column order expected by the trained classifiers.
 - `src/final_detector.py`: Final detector class. `FinalReviewDetector` loads `models/diverse_week5_artifacts.pkl` (random forest + temperature scaler trained on the diversified-data split) and exposes:
     - `detect_review(review_text, extracted_features)` returning a `FinalDetectionOutput` Pydantic object
@@ -135,7 +135,7 @@ The repository keeps both earlier and final artifacts:
 - `dataset_audit_outputs.pkl` stores the leakage, boilerplate, saturation, and per-opening tables from the audit notebook.
 - `week5_audit_outputs.pkl` stores the full split-overlap counts, opening-phrase frequency table, dedup metrics, and dedup-test predictions referenced by the audit notebook.
 
-## Headline Numbers (Milestone 3)
+## Headline Numbers
 - Week 2 prompting-only baseline (100-review sample): F1 = 0.350
 - Final calibrated Random Forest on diversified data (full 5,185-review test set): F1 = 1.000
 - F1 improvement over baseline: +0.650 (well above the ≥0.05 success criterion in the proposal)
