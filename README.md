@@ -42,6 +42,7 @@ ds301-project-group25/
 │   └── updated_week4_week5_outputs.pkl
 │   ├── subgroup_analysis_outputs.pkl
 │   └── dataset_audit_outputs.pkl
+│   └── casing_ood_experiment_outputs.pkl
 │
 ├── notebooks/
 │   ├── AI_Review_Detector_Week1_3_Complete.ipynb
@@ -52,6 +53,7 @@ ds301-project-group25/
 │   ├── dataset_audit_and_shortcut_analysis.ipynb
 │   ├── week4_week5_updated_with_diverse_data.ipynb
 │   ├── detector_sanity_check.ipynb
+│   ├── casing_ood_experiment.ipynb
 │   └── final_demo.ipynb
 │
 ├── src/
@@ -82,6 +84,7 @@ ds301-project-group25/
 - notebooks/detector_sanity_check.ipynb: Simple end-to-end detector loading and testing notebook for final integration checks.
 - notebooks/subgroup_analysis_by_length.ipynb: Splits the test set into short/long reviews and reports per-subgroup classification metrics, calibration quality, and uncertain-band activation from pre-saved predictions.
 - notebooks/dataset_audit_and_shortcut_analysis.ipynb: Audits train/val/test leakage, AI boilerplate prefixes, and probability saturation to responsibly interpret the perfect F1 score flagged in Milestone 2.
+- notebooks/casing_ood_experiment.ipynb: Quantifies the casing OOD failure through three sub-experiments, lowercasing AI reviews, sentence-casing human reviews, and stepwise transformation attribution, to pinpoint which preprocessing operation drives the misclassification.
 - notebooks/final_demo.ipynb: End-to-end demo running the final detector on seven curated reviews covering key edge cases.
 
 
@@ -97,7 +100,7 @@ The repository keeps both earlier and final artifacts:
 - updated_week4_week5_outputs.pkl stores the updated Week 4 to 5 evaluation outputs
 - subgroup_analysis_outputs.pkl stores the saved tables (per-subgroup metrics, band activation, calibration quality, errors) from the subgroup analysis notebook
 - dataset_audit_outputs.pkl stores the leakage, boilerplate, saturation, and per-opening tables from the audit notebook
-- Week 5 subgroup analysis by review length and follow-up dataset audit that quantifies leakage, boilerplate openings, and probability saturation
+- casing_ood_experiment_outputs.pkl stores the per-review predictions for Experiments A, B and the stepwise attribution table from Experiment C.
 
 ## References
 See the project proposal and milestone materials for the full methodology, literature review, planned pipeline design, and evaluation rationale.
