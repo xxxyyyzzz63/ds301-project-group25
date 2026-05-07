@@ -46,21 +46,21 @@ LINGUISTIC_ANALYSIS_PROMPT = PromptTemplate(
     template="""
 You are analyzing a hotel review for linguistic signals relevant to AI-vs-human authorship.
 
-IMPORTANT: Do NOT make the final classification yet.
-Your task is to analyze HOW the review is written, not WHO wrote it.
+IMPORTANT:
+- Do NOT make the final classification.
+- Analyze HOW the review is written, not WHO wrote it.
+- Return VALID JSON ONLY.
+- Use ONLY the allowed label values listed below.
+- Do NOT invent new label words.
+- Do NOT include markdown fences.
 
-Focus on:
-- whether the tone is overly polished or more natural/casual
-- whether details are concrete and lived-in versus generic
-- whether the language feels templated or repetitive
-- whether the review shows human messiness, irregularity, shorthand, or uneven pacing
-- whether the review has natural narrative flow or formulaic structure
-
-Rules:
-- Base your analysis only on the review text
-- Return valid JSON only
-- Include 1 to 3 short evidence spans copied exactly from the review when possible
-- Do not include markdown fences
+Allowed values:
+tone: casual OR polished OR mixed
+specificity: concrete OR generic OR mixed
+personal_experience_markers: strong OR moderate OR weak
+templated_language: high OR moderate OR low
+human_messiness: high OR moderate OR low
+narrative_flow: natural OR formulaic OR mixed
 
 Return JSON with exactly these keys:
 tone
@@ -72,6 +72,23 @@ narrative_flow
 evidence_spans
 overall_linguistic_assessment
 
+Rules:
+- Base your analysis only on the review text
+- Include 1 to 3 short evidence spans copied exactly from the review when possible
+- evidence_spans must be a JSON list of strings
+
+Example valid output:
+{{
+  "tone": "casual",
+  "specificity": "concrete",
+  "personal_experience_markers": "strong",
+  "templated_language": "low",
+  "human_messiness": "high",
+  "narrative_flow": "natural",
+  "evidence_spans": ["wifi terrible", "location good"],
+  "overall_linguistic_assessment": "The review sounds casual, specific, and personally grounded."
+}}
+
 Review:
 {review_text}
 """.strip(),
@@ -81,7 +98,6 @@ Review:
 class LLMLinguisticAnalyzer:
     """
     LLM-based linguistic analyzer for Stage 1 of the pipeline.
-    This component produces structured evidence about how the review sounds.
     """
 
     def __init__(
@@ -116,6 +132,104 @@ class LLMLinguisticAnalyzer:
                 text = text[:-3].strip()
         return text
 
+    @staticmethod
+    def _normalize_value(field_name: str, value):
+        """
+        Map common LLM free-form outputs into the allowed enum values.
+        """
+        if not isinstance(value, str):
+            return value
+
+        v = value.strip().lower()
+
+        if field_name == "tone":
+            if "casual" in v or "natural" in v:
+                return "casual"
+            if "polished" in v or "formal" in v:
+                return "polished"
+            return "mixed"
+
+        if field_name == "specificity":
+            if "concrete" in v or "specific" in v or "lived" in v:
+                return "concrete"
+            if "generic" in v or "vague" in v:
+                return "generic"
+            return "mixed"
+
+        if field_name == "personal_experience_markers":
+            if v in {"yes", "strong", "high"}:
+                return "strong"
+            if v in {"moderate", "medium"}:
+                return "moderate"
+            if v in {"no", "weak", "low"}:
+                return "weak"
+            if "strong" in v:
+                return "strong"
+            if "weak" in v:
+                return "weak"
+            return "moderate"
+
+        if field_name == "templated_language":
+            if v in {"yes", "high"}:
+                return "high"
+            if v in {"moderate", "medium"}:
+                return "moderate"
+            if v in {"no", "low"}:
+                return "low"
+            if "formulaic" in v or "templated" in v or "repetitive" in v:
+                return "high"
+            return "moderate"
+
+        if field_name == "human_messiness":
+            if v in {"yes", "high"}:
+                return "high"
+            if v in {"moderate", "medium"}:
+                return "moderate"
+            if v in {"no", "low"}:
+                return "low"
+            if "messy" in v or "rough" in v or "irregular" in v:
+                return "high"
+            return "moderate"
+
+        if field_name == "narrative_flow":
+            if "natural" in v:
+                return "natural"
+            if "formulaic" in v or "templated" in v:
+                return "formulaic"
+            if "uneven" in v or "mixed" in v:
+                return "mixed"
+            return "mixed"
+
+        return value
+
+    def _normalize_parsed_output(self, parsed: dict) -> dict:
+        """
+        Normalize common LLM variations before Pydantic validation.
+        """
+        normalized = dict(parsed)
+
+        fields_to_normalize = [
+            "tone",
+            "specificity",
+            "personal_experience_markers",
+            "templated_language",
+            "human_messiness",
+            "narrative_flow",
+        ]
+
+        for field in fields_to_normalize:
+            if field in normalized:
+                normalized[field] = self._normalize_value(field, normalized[field])
+
+        if "evidence_spans" not in normalized or normalized["evidence_spans"] is None:
+            normalized["evidence_spans"] = []
+        elif isinstance(normalized["evidence_spans"], str):
+            normalized["evidence_spans"] = [normalized["evidence_spans"]]
+        elif not isinstance(normalized["evidence_spans"], list):
+            normalized["evidence_spans"] = [str(normalized["evidence_spans"])]
+
+        return normalized
+
     def analyze(self, review_text: str) -> dict:
         """
         Analyze a review and return structured linguistic dimensions.
@@ -134,7 +248,8 @@ class LLMLinguisticAnalyzer:
                 f"Failed to parse linguistic analysis JSON.\nRaw response:\n{raw_text}"
             ) from exc
 
-        validated = LinguisticAnalysisOutput(**parsed)
+        normalized = self._normalize_parsed_output(parsed)
+        validated = LinguisticAnalysisOutput(**normalized)
         return validated.model_dump()
 
 
@@ -177,7 +292,10 @@ if __name__ == "__main__":
             print("\nAnalysis returned successfully.")
             print(f"Tone: {result['tone']}")
             print(f"Specificity: {result['specificity']}")
+            print(f"Personal experience markers: {result['personal_experience_markers']}")
             print(f"Templated language: {result['templated_language']}")
+            print(f"Human messiness: {result['human_messiness']}")
+            print(f"Narrative flow: {result['narrative_flow']}")
             print(f"Evidence spans: {result['evidence_spans']}")
         except Exception as e:
             print(f"\nError: {e}")
