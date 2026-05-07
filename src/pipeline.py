@@ -120,13 +120,16 @@ class ReviewDetectionPipeline:
         print("PIPELINE SUMMARY")
         print("=" * 100)
         print(
-            f"Stage 1: {ling['tone']} tone, {ling['specificity']} specificity"
+            f"Stage 1 linguistic analysis: {ling['tone']} tone, {ling['specificity']} specificity, "
+            f"{ling['templated_language']} templated language"
         )
         print(
-            f"Stage 2: {clf['predicted_label']} ({clf['ai_probability']:.2%} AI probability)"
+            f"Stage 2 classifier evidence: {clf['predicted_label']} "
+            f"({clf['ai_probability']:.2%} AI probability, score {clf['ai_likeness_score']})"
         )
         print(
-            f"Stage 3: {fusion['final_predicted_label']} ({fusion['agreement_status']} between stages)"
+            f"Stage 3 fused decision: {fusion['final_predicted_label']} "
+            f"({fusion['agreement_status']} relationship between linguistic and classifier evidence)"
         )
         print("=" * 100 + "\n")
 
