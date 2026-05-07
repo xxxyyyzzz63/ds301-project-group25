@@ -283,7 +283,7 @@ if __name__ == "__main__":
         "uncertainty_band": "likely AI-generated",
         "top_features": {
             "avg_sentence_length": 34.2,
-            "templated_language_proxy": 0.0,
+            "capital_letter_ratio": 0.02,
         },
     }
 
@@ -308,10 +308,14 @@ if __name__ == "__main__":
         )
 
         print("\nAdjudication returned successfully.")
+        print(f"Classifier label: {result['classifier_label']}")
+        print(f"Classifier probability: {result['classifier_probability']:.4f}")
         print(f"Final label: {result['final_predicted_label']}")
         print(f"Agreement: {result['agreement_status']}")
         print(f"Uncertainty band: {result['final_uncertainty_band']}")
-        print(f"Explanation: {result['final_explanation'][:100]}...")
+        print("Explanation:")
+        print(result["final_explanation"])
+
     except Exception as e:
         print(f"\nError: {e}")
         sys.exit(1)
