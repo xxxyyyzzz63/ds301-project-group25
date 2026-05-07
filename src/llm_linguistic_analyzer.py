@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import List, Literal
+from typing import List, Literal, Any
 
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
@@ -18,7 +18,7 @@ class LinguisticAnalysisOutput(BaseModel):
         description="Overall tone/register of the review"
     )
     specificity: Literal["concrete", "generic", "mixed"] = Field(
-        description="Whether the review gives specific details or generic statements"
+        description="Whether the review gives specific lived details or generic evaluative statements"
     )
     personal_experience_markers: Literal["strong", "moderate", "weak"] = Field(
         description="Strength of first-hand or subjective voice"
@@ -46,21 +46,44 @@ LINGUISTIC_ANALYSIS_PROMPT = PromptTemplate(
     template="""
 You are analyzing a hotel review for linguistic signals relevant to AI-vs-human authorship.
 
-IMPORTANT:
-- Do NOT make the final classification.
-- Analyze HOW the review is written, not WHO wrote it.
-- Return VALID JSON ONLY.
-- Use ONLY the allowed label values listed below.
-- Do NOT invent new label words.
-- Do NOT include markdown fences.
+IMPORTANT: Do NOT make the final classification yet.
+Your task is to analyze HOW the review is written, not WHO wrote it.
 
-Allowed values:
-tone: casual OR polished OR mixed
-specificity: concrete OR generic OR mixed
-personal_experience_markers: strong OR moderate OR weak
-templated_language: high OR moderate OR low
-human_messiness: high OR moderate OR low
-narrative_flow: natural OR formulaic OR mixed
+Use these definitions carefully:
+
+- "Concrete" means specific lived-in details tied to an experience, event, or complaint,
+  such as timing, sequence, sensory detail, or particular problems encountered.
+- "Generic" means broad evaluative praise or criticism that could apply to many hotels,
+  even if it mentions things like service, amenities, or decor.
+- Phrases like "impeccable service", "outstanding amenities", "thoughtfully curated",
+  and "excellent experience" are usually generic unless they are tied to a specific event.
+- "Strong personal experience markers" require clear first-hand, subjective, lived experience.
+- "Templated language" should be high when the wording sounds polished, promotional,
+  formulaic, or broadly reusable across many reviews.
+- "Human messiness" includes shorthand, uneven pacing, rough phrasing, fragments,
+  inconsistent tone, or natural complaint style.
+
+Focus on:
+- whether the tone is overly polished or more natural/casual
+- whether details are concrete and lived-in versus generic
+- whether the language feels templated or repetitive
+- whether the review shows human messiness, irregularity, shorthand, or uneven pacing
+- whether the review has natural narrative flow or formulaic structure
+
+Rules:
+- Base your analysis only on the review text
+- Return valid JSON only
+- Use only these exact labels:
+
+tone: casual, polished, mixed
+specificity: concrete, generic, mixed
+personal_experience_markers: strong, moderate, weak
+templated_language: high, moderate, low
+human_messiness: high, moderate, low
+narrative_flow: natural, formulaic, mixed
+
+- Include 1 to 3 short evidence spans copied exactly from the review when possible
+- Do not include markdown fences
 
 Return JSON with exactly these keys:
 tone
@@ -72,23 +95,6 @@ narrative_flow
 evidence_spans
 overall_linguistic_assessment
 
-Rules:
-- Base your analysis only on the review text
-- Include 1 to 3 short evidence spans copied exactly from the review when possible
-- evidence_spans must be a JSON list of strings
-
-Example valid output:
-{{
-  "tone": "casual",
-  "specificity": "concrete",
-  "personal_experience_markers": "strong",
-  "templated_language": "low",
-  "human_messiness": "high",
-  "narrative_flow": "natural",
-  "evidence_spans": ["wifi terrible", "location good"],
-  "overall_linguistic_assessment": "The review sounds casual, specific, and personally grounded."
-}}
-
 Review:
 {review_text}
 """.strip(),
@@ -98,6 +104,7 @@ Review:
 class LLMLinguisticAnalyzer:
     """
     LLM-based linguistic analyzer for Stage 1 of the pipeline.
+    This component produces structured evidence about how the review sounds.
     """
 
     def __init__(
@@ -133,81 +140,90 @@ class LLMLinguisticAnalyzer:
         return text
 
     @staticmethod
-    def _normalize_value(field_name: str, value):
+    def _normalize_label(value: Any, field_name: str) -> Any:
         """
-        Map common LLM free-form outputs into the allowed enum values.
+        Normalize common LLM label variants into the schema-approved labels.
         """
         if not isinstance(value, str):
             return value
 
         v = value.strip().lower()
 
-        if field_name == "tone":
-            if "casual" in v or "natural" in v:
-                return "casual"
-            if "polished" in v or "formal" in v:
-                return "polished"
-            return "mixed"
+        mapping = {
+            "tone": {
+                "casual": "casual",
+                "informal": "casual",
+                "natural": "casual",
+                "human-like": "casual",
+                "polished": "polished",
+                "overly polished": "polished",
+                "formal": "polished",
+                "highly polished": "polished",
+                "mixed": "mixed",
+                "balanced": "mixed",
+            },
+            "specificity": {
+                "concrete": "concrete",
+                "specific": "concrete",
+                "detailed": "concrete",
+                "generic": "generic",
+                "vague": "generic",
+                "broad": "generic",
+                "mixed": "mixed",
+                "somewhat concrete": "mixed",
+                "somewhat generic": "mixed",
+            },
+            "personal_experience_markers": {
+                "strong": "strong",
+                "high": "strong",
+                "very strong": "strong",
+                "moderate": "moderate",
+                "medium": "moderate",
+                "some": "moderate",
+                "weak": "weak",
+                "low": "weak",
+                "very weak": "weak",
+            },
+            "templated_language": {
+                "high": "high",
+                "very high": "high",
+                "strong": "high",
+                "moderate": "moderate",
+                "medium": "moderate",
+                "mixed": "moderate",
+                "low": "low",
+                "weak": "low",
+                "minimal": "low",
+            },
+            "human_messiness": {
+                "high": "high",
+                "very high": "high",
+                "strong": "high",
+                "moderate": "moderate",
+                "medium": "moderate",
+                "mixed": "moderate",
+                "low": "low",
+                "weak": "low",
+                "minimal": "low",
+            },
+            "narrative_flow": {
+                "natural": "natural",
+                "human-like": "natural",
+                "smooth": "natural",
+                "formulaic": "formulaic",
+                "templated": "formulaic",
+                "scripted": "formulaic",
+                "mixed": "mixed",
+                "balanced": "mixed",
+            },
+        }
 
-        if field_name == "specificity":
-            if "concrete" in v or "specific" in v or "lived" in v:
-                return "concrete"
-            if "generic" in v or "vague" in v:
-                return "generic"
-            return "mixed"
+        return mapping.get(field_name, {}).get(v, v)
 
-        if field_name == "personal_experience_markers":
-            if v in {"yes", "strong", "high"}:
-                return "strong"
-            if v in {"moderate", "medium"}:
-                return "moderate"
-            if v in {"no", "weak", "low"}:
-                return "weak"
-            if "strong" in v:
-                return "strong"
-            if "weak" in v:
-                return "weak"
-            return "moderate"
-
-        if field_name == "templated_language":
-            if v in {"yes", "high"}:
-                return "high"
-            if v in {"moderate", "medium"}:
-                return "moderate"
-            if v in {"no", "low"}:
-                return "low"
-            if "formulaic" in v or "templated" in v or "repetitive" in v:
-                return "high"
-            return "moderate"
-
-        if field_name == "human_messiness":
-            if v in {"yes", "high"}:
-                return "high"
-            if v in {"moderate", "medium"}:
-                return "moderate"
-            if v in {"no", "low"}:
-                return "low"
-            if "messy" in v or "rough" in v or "irregular" in v:
-                return "high"
-            return "moderate"
-
-        if field_name == "narrative_flow":
-            if "natural" in v:
-                return "natural"
-            if "formulaic" in v or "templated" in v:
-                return "formulaic"
-            if "uneven" in v or "mixed" in v:
-                return "mixed"
-            return "mixed"
-
-        return value
-
-    def _normalize_parsed_output(self, parsed: dict) -> dict:
+    def _normalize_output(self, parsed: dict) -> dict:
         """
-        Normalize common LLM variations before Pydantic validation.
+        Normalize common LLM label variants before Pydantic validation.
         """
-        normalized = dict(parsed)
-
         fields_to_normalize = [
             "tone",
             "specificity",
@@ -217,16 +233,17 @@ class LLMLinguisticAnalyzer:
             "narrative_flow",
         ]
 
+        normalized = dict(parsed)
+
         for field in fields_to_normalize:
             if field in normalized:
-                normalized[field] = self._normalize_value(field, normalized[field])
+                normalized[field] = self._normalize_label(normalized[field], field)
 
+        # Ensure evidence_spans is always a list
         if "evidence_spans" not in normalized or normalized["evidence_spans"] is None:
             normalized["evidence_spans"] = []
         elif isinstance(normalized["evidence_spans"], str):
             normalized["evidence_spans"] = [normalized["evidence_spans"]]
-        elif not isinstance(normalized["evidence_spans"], list):
-            normalized["evidence_spans"] = [str(normalized["evidence_spans"])]
 
         return normalized
 
@@ -248,7 +265,7 @@ class LLMLinguisticAnalyzer:
                 f"Failed to parse linguistic analysis JSON.\nRaw response:\n{raw_text}"
             ) from exc
 
-        normalized = self._normalize_parsed_output(parsed)
+        normalized = self._normalize_output(parsed)
         validated = LinguisticAnalysisOutput(**normalized)
         return validated.model_dump()
 
