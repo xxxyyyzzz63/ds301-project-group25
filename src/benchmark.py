@@ -17,13 +17,31 @@ class LLMBenchmark:
     Approaches tested:
     1. Baseline: simple few-shot LLM prompt
     2. Classifier-only: stylometric ML detector only
-    3. Full pipeline: multi-stage LLM-guided system
+    3. Full pipeline (final fusion): uses fusion output directly
+    4. Full pipeline (resolved): maps Uncertain back to classifier label
     """
 
     def __init__(self) -> None:
         self.baseline_detector = BaselineDetector()
         self.classifier_only = FinalReviewDetector()
         self.full_pipeline = ReviewDetectionPipeline()
+
+    @staticmethod
+    def _compute_metrics(predictions: List[str], true_labels: List[str]) -> Dict[str, float]:
+        y_true = [1 if label == "AI" else 0 for label in true_labels]
+        y_pred = [1 if pred == "AI" else 0 for pred in predictions]
+
+        accuracy = accuracy_score(y_true, y_pred)
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            y_true, y_pred, average="binary", zero_division=0
+        )
+
+        return {
+            "accuracy": accuracy,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+        }
 
     def benchmark_approach(
         self,
@@ -37,7 +55,7 @@ class LLMBenchmark:
         print(f"\nBenchmarking: {approach_name}")
         print(f"Processing {len(reviews)} reviews...")
 
-        predictions = []
+        predictions: List[str] = []
         total_time = 0.0
         uncertain_count = 0
 
@@ -52,13 +70,17 @@ class LLMBenchmark:
                 result = self.classifier_only.detect(review)
                 pred = result["predicted_label"]
 
-            elif approach_name == "Full Pipeline (Multi-Stage LLM)":
+            elif approach_name == "Full Pipeline (Final Fusion)":
                 result = self.full_pipeline.run(review)
                 pred = result["fusion_output"]["final_predicted_label"]
-
                 if pred == "Uncertain":
                     uncertain_count += 1
-                    # For benchmark scoring, map Uncertain back to classifier decision
+
+            elif approach_name == "Full Pipeline (Resolved)":
+                result = self.full_pipeline.run(review)
+                pred = result["fusion_output"]["final_predicted_label"]
+                if pred == "Uncertain":
+                    uncertain_count += 1
                     pred = result["classifier_output"]["predicted_label"]
 
             else:
@@ -67,22 +89,15 @@ class LLMBenchmark:
             predictions.append(pred)
             total_time += time.time() - start_time
 
-        y_true = [1 if label == "AI" else 0 for label in true_labels]
-        y_pred = [1 if pred == "AI" else 0 for pred in predictions]
-
-        accuracy = accuracy_score(y_true, y_pred)
-        precision, recall, f1, _ = precision_recall_fscore_support(
-            y_true, y_pred, average="binary", zero_division=0
-        )
-
+        metrics = self._compute_metrics(predictions, true_labels)
         avg_time = total_time / len(reviews) if reviews else 0.0
 
         return {
             "approach": approach_name,
-            "accuracy": accuracy,
-            "precision": precision,
-            "recall": recall,
-            "f1": f1,
+            "accuracy": metrics["accuracy"],
+            "precision": metrics["precision"],
+            "recall": metrics["recall"],
+            "f1": metrics["f1"],
             "avg_time_per_review": avg_time,
             "total_time": total_time,
             "uncertain_count": uncertain_count,
@@ -110,7 +125,8 @@ class LLMBenchmark:
         approaches = [
             "Baseline (Few-Shot Prompt)",
             "Classifier-Only (No LLM Fusion)",
-            "Full Pipeline (Multi-Stage LLM)",
+            "Full Pipeline (Final Fusion)",
+            "Full Pipeline (Resolved)",
         ]
 
         results = []
@@ -122,6 +138,8 @@ class LLMBenchmark:
 
         return {
             "test_size": len(test_reviews),
+            "test_reviews": test_reviews,
+            "true_labels": test_labels,
             "results": results,
             "winner": winner,
         }
@@ -131,14 +149,14 @@ class LLMBenchmark:
         """
         Pretty-print benchmark results.
         """
-        print("\n" + "=" * 100)
+        print("\n" + "=" * 120)
         print("BENCHMARK RESULTS")
-        print("=" * 100)
+        print("=" * 120)
 
         results = benchmark_results["results"]
 
         print(
-            f"\n{'Approach':<40} "
+            f"\n{'Approach':<36} "
             f"{'Accuracy':<12} "
             f"{'Precision':<12} "
             f"{'Recall':<12} "
@@ -146,11 +164,11 @@ class LLMBenchmark:
             f"{'Time (s)':<12} "
             f"{'Uncertain':<12}"
         )
-        print("-" * 112)
+        print("-" * 120)
 
         for r in results:
             print(
-                f"{r['approach']:<40} "
+                f"{r['approach']:<36} "
                 f"{r['accuracy']:<12.4f} "
                 f"{r['precision']:<12.4f} "
                 f"{r['recall']:<12.4f} "
@@ -159,28 +177,75 @@ class LLMBenchmark:
                 f"{r['uncertain_count']:<12}"
             )
 
-        print("\n" + "=" * 100)
+        print("\n" + "=" * 120)
         print(f"BEST APPROACH ON THIS TEST SET: {benchmark_results['winner']}")
-        print("=" * 100)
+        print("=" * 120)
 
-        baseline = next(r for r in results if "Baseline" in r["approach"])
-        full = next(r for r in results if "Full Pipeline" in r["approach"])
+        baseline = next(r for r in results if r["approach"] == "Baseline (Few-Shot Prompt)")
+        classifier_only = next(r for r in results if r["approach"] == "Classifier-Only (No LLM Fusion)")
+        final_fusion = next(r for r in results if r["approach"] == "Full Pipeline (Final Fusion)")
+        resolved = next(r for r in results if r["approach"] == "Full Pipeline (Resolved)")
 
         print("\nKEY INSIGHTS:")
-        if baseline["f1"] > 0:
-            f1_improvement = ((full["f1"] - baseline["f1"]) / baseline["f1"]) * 100
-            print(f"F1 difference vs baseline: {f1_improvement:+.1f}%")
-        else:
-            print("Baseline F1 was 0.0, so percentage difference is undefined.")
 
-        print(f"Full pipeline avg time: {full['avg_time_per_review']:.2f}s per review")
-        print(f"Full pipeline uncertain outputs: {full['uncertain_count']}")
+        if baseline["f1"] > 0:
+            diff_final_vs_baseline = ((final_fusion["f1"] - baseline["f1"]) / baseline["f1"]) * 100
+            diff_resolved_vs_baseline = ((resolved["f1"] - baseline["f1"]) / baseline["f1"]) * 100
+            print(f"F1 difference: Final fusion vs baseline = {diff_final_vs_baseline:+.1f}%")
+            print(f"F1 difference: Resolved pipeline vs baseline = {diff_resolved_vs_baseline:+.1f}%")
+        else:
+            print("Baseline F1 was 0.0, so percentage differences are undefined.")
+
+        print(f"Classifier-only avg time: {classifier_only['avg_time_per_review']:.2f}s per review")
+        print(f"Final fusion avg time: {final_fusion['avg_time_per_review']:.2f}s per review")
+        print(f"Resolved pipeline avg time: {resolved['avg_time_per_review']:.2f}s per review")
+        print(f"Final fusion uncertain outputs: {final_fusion['uncertain_count']}")
+        print(f"Resolved pipeline uncertain outputs: {resolved['uncertain_count']}")
 
         if benchmark_results["test_size"] < 20:
             print(
                 "\nCAUTION: This benchmark uses a very small test set. "
                 "Treat these results as a smoke test, not a reliable performance comparison."
             )
+
+            print("\nPer-example labels for inspection:")
+            print("-" * 120)
+            true_labels = benchmark_results["true_labels"]
+            reviews = benchmark_results["test_reviews"]
+
+            pred_lookup = {r["approach"]: r["predictions"] for r in results}
+
+            for i, (review, true_label) in enumerate(zip(reviews, true_labels), start=1):
+                review_short = review if len(review) <= 70 else review[:67] + "..."
+                print(f"\nExample {i}")
+                print(f"Review:   {review_short}")
+                print(f"True:     {true_label}")
+                for approach_name, preds in pred_lookup.items():
+                    print(f"{approach_name:<36} {preds[i-1]}")
+
+    @staticmethod
+    def benchmark_from_dataframe(
+        df,
+        review_col: str = "Review",
+        label_col: str = "label"
+    ) -> Dict[str, List[str]]:
+        """
+        Helper to extract review texts and labels from a dataframe.
+        """
+        reviews = df[review_col].astype(str).tolist()
+
+        labels = []
+        for value in df[label_col]:
+            if isinstance(value, str):
+                v = value.strip().lower()
+                labels.append("AI" if v == "ai" else "Human")
+            else:
+                labels.append("AI" if int(value) == 1 else "Human")
+
+        return {
+            "reviews": reviews,
+            "labels": labels,
+        }
 
 
 if __name__ == "__main__":
@@ -207,5 +272,6 @@ if __name__ == "__main__":
     print("\nThis benchmark currently demonstrates:")
     print("- basic end-to-end comparison across approaches")
     print("- timing differences across systems")
+    print("- difference between final fusion and resolved pipeline behavior")
     print("- whether the full pipeline produces uncertain cases")
     print("\nFor a meaningful benchmark, run this on a larger labeled review set.\n")
