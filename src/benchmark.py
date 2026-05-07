@@ -15,9 +15,9 @@ class LLMBenchmark:
     Benchmarks different approaches for AI review detection.
 
     Approaches tested:
-    1. Baseline: Simple few-shot LLM prompt
-    2. Classifier-Only: Stylometric ML detector only
-    3. Full Pipeline: Multi-stage LLM-guided system
+    1. Baseline: simple few-shot LLM prompt
+    2. Classifier-only: stylometric ML detector only
+    3. Full pipeline: multi-stage LLM-guided system
     """
 
     def __init__(self) -> None:
@@ -33,20 +33,13 @@ class LLMBenchmark:
     ) -> Dict[str, Any]:
         """
         Benchmark a single approach.
-
-        Args:
-            approach_name: Name of the approach
-            reviews: List of review texts
-            true_labels: Ground truth labels ("AI" or "Human")
-
-        Returns:
-            Dictionary with performance metrics
         """
         print(f"\nBenchmarking: {approach_name}")
         print(f"Processing {len(reviews)} reviews...")
 
         predictions = []
         total_time = 0.0
+        uncertain_count = 0
 
         for review in reviews:
             start_time = time.time()
@@ -63,8 +56,9 @@ class LLMBenchmark:
                 result = self.full_pipeline.run(review)
                 pred = result["fusion_output"]["final_predicted_label"]
 
-                # Map Uncertain to classifier prediction for evaluation
                 if pred == "Uncertain":
+                    uncertain_count += 1
+                    # For benchmark scoring, map Uncertain back to classifier decision
                     pred = result["classifier_output"]["predicted_label"]
 
             else:
@@ -91,6 +85,7 @@ class LLMBenchmark:
             "f1": f1,
             "avg_time_per_review": avg_time,
             "total_time": total_time,
+            "uncertain_count": uncertain_count,
             "predictions": predictions,
         }
 
@@ -148,9 +143,10 @@ class LLMBenchmark:
             f"{'Precision':<12} "
             f"{'Recall':<12} "
             f"{'F1':<12} "
-            f"{'Time (s)':<12}"
+            f"{'Time (s)':<12} "
+            f"{'Uncertain':<12}"
         )
-        print("-" * 100)
+        print("-" * 112)
 
         for r in results:
             print(
@@ -159,29 +155,32 @@ class LLMBenchmark:
                 f"{r['precision']:<12.4f} "
                 f"{r['recall']:<12.4f} "
                 f"{r['f1']:<12.4f} "
-                f"{r['avg_time_per_review']:<12.4f}"
+                f"{r['avg_time_per_review']:<12.4f} "
+                f"{r['uncertain_count']:<12}"
             )
 
         print("\n" + "=" * 100)
-        print(f"BEST APPROACH: {benchmark_results['winner']}")
+        print(f"BEST APPROACH ON THIS TEST SET: {benchmark_results['winner']}")
         print("=" * 100)
 
         baseline = next(r for r in results if "Baseline" in r["approach"])
         full = next(r for r in results if "Full Pipeline" in r["approach"])
 
+        print("\nKEY INSIGHTS:")
         if baseline["f1"] > 0:
             f1_improvement = ((full["f1"] - baseline["f1"]) / baseline["f1"]) * 100
-            print("\nKEY INSIGHTS:")
-            print(f"F1 Score improvement over baseline: {f1_improvement:+.1f}%")
+            print(f"F1 difference vs baseline: {f1_improvement:+.1f}%")
         else:
-            print("\nKEY INSIGHTS:")
-            print("Baseline F1 was 0.0, so percentage improvement is undefined.")
+            print("Baseline F1 was 0.0, so percentage difference is undefined.")
 
         print(f"Full pipeline avg time: {full['avg_time_per_review']:.2f}s per review")
-        print(
-            f"Trade-off: richer multi-stage reasoning at "
-            f"{full['avg_time_per_review']:.2f}s latency per review"
-        )
+        print(f"Full pipeline uncertain outputs: {full['uncertain_count']}")
+
+        if benchmark_results["test_size"] < 20:
+            print(
+                "\nCAUTION: This benchmark uses a very small test set. "
+                "Treat these results as a smoke test, not a reliable performance comparison."
+            )
 
 
 if __name__ == "__main__":
@@ -191,6 +190,7 @@ if __name__ == "__main__":
         print("ERROR: Please set OPENAI_API_KEY")
         raise SystemExit(1)
 
+    # Small smoke-test benchmark only
     test_reviews = [
         "stayed here last week. wifi terrible. breakfast meh but location good",
         "This establishment exceeded all expectations with impeccable service.",
@@ -204,7 +204,8 @@ if __name__ == "__main__":
     results = benchmark.run_full_benchmark(test_reviews, test_labels)
     benchmark.pretty_print_benchmark(results)
 
-    print("\nThis benchmark demonstrates:")
-    print("- systematic comparison of approaches")
-    print("- performance versus latency trade-offs")
-    print("- value added by the multi-stage LLM-guided pipeline\n")
+    print("\nThis benchmark currently demonstrates:")
+    print("- basic end-to-end comparison across approaches")
+    print("- timing differences across systems")
+    print("- whether the full pipeline produces uncertain cases")
+    print("\nFor a meaningful benchmark, run this on a larger labeled review set.\n")
