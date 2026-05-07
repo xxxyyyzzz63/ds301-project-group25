@@ -19,6 +19,10 @@ class LLMBenchmark:
     2. Classifier-only: stylometric ML detector only
     3. Full pipeline (final fusion): uses fusion output directly
     4. Full pipeline (resolved): maps Uncertain back to classifier label
+
+    Important:
+    The full pipeline is run only once per review, and both "Final Fusion"
+    and "Resolved" are derived from the same cached pipeline result.
     """
 
     def __init__(self) -> None:
@@ -33,7 +37,10 @@ class LLMBenchmark:
 
         accuracy = accuracy_score(y_true, y_pred)
         precision, recall, f1, _ = precision_recall_fscore_support(
-            y_true, y_pred, average="binary", zero_division=0
+            y_true,
+            y_pred,
+            average="binary",
+            zero_division=0,
         )
 
         return {
@@ -43,65 +50,95 @@ class LLMBenchmark:
             "f1": f1,
         }
 
-    def benchmark_approach(
-        self,
-        approach_name: str,
-        reviews: List[str],
-        true_labels: List[str]
-    ) -> Dict[str, Any]:
-        """
-        Benchmark a single approach.
-        """
-        print(f"\nBenchmarking: {approach_name}")
-        print(f"Processing {len(reviews)} reviews...")
-
+    def _run_baseline(self, reviews: List[str]) -> Dict[str, Any]:
         predictions: List[str] = []
+        total_time = 0.0
+
+        for review in reviews:
+            start_time = time.time()
+            result = self.baseline_detector.detect(review)
+            pred = "AI" if result.prediction.lower() == "ai" else "Human"
+            predictions.append(pred)
+            total_time += time.time() - start_time
+
+        avg_time = total_time / len(reviews) if reviews else 0.0
+
+        return {
+            "approach": "Baseline (Few-Shot Prompt)",
+            "predictions": predictions,
+            "avg_time_per_review": avg_time,
+            "total_time": total_time,
+            "uncertain_count": 0,
+        }
+
+    def _run_classifier_only(self, reviews: List[str]) -> Dict[str, Any]:
+        predictions: List[str] = []
+        total_time = 0.0
+
+        for review in reviews:
+            start_time = time.time()
+            result = self.classifier_only.detect(review)
+            pred = result["predicted_label"]
+            predictions.append(pred)
+            total_time += time.time() - start_time
+
+        avg_time = total_time / len(reviews) if reviews else 0.0
+
+        return {
+            "approach": "Classifier-Only (No LLM Fusion)",
+            "predictions": predictions,
+            "avg_time_per_review": avg_time,
+            "total_time": total_time,
+            "uncertain_count": 0,
+        }
+
+    def _run_full_pipeline_once(self, reviews: List[str]) -> Dict[str, Any]:
+        """
+        Run the full pipeline once per review and derive both final-fusion and resolved outputs
+        from the same cached pipeline result.
+        """
+        final_predictions: List[str] = []
+        resolved_predictions: List[str] = []
         total_time = 0.0
         uncertain_count = 0
 
         for review in reviews:
             start_time = time.time()
-
-            if approach_name == "Baseline (Few-Shot Prompt)":
-                result = self.baseline_detector.detect(review)
-                pred = "AI" if result.prediction.lower() == "ai" else "Human"
-
-            elif approach_name == "Classifier-Only (No LLM Fusion)":
-                result = self.classifier_only.detect(review)
-                pred = result["predicted_label"]
-
-            elif approach_name == "Full Pipeline (Final Fusion)":
-                result = self.full_pipeline.run(review)
-                pred = result["fusion_output"]["final_predicted_label"]
-                if pred == "Uncertain":
-                    uncertain_count += 1
-
-            elif approach_name == "Full Pipeline (Resolved)":
-                result = self.full_pipeline.run(review)
-                pred = result["fusion_output"]["final_predicted_label"]
-                if pred == "Uncertain":
-                    uncertain_count += 1
-                    pred = result["classifier_output"]["predicted_label"]
-
-            else:
-                raise ValueError(f"Unknown approach: {approach_name}")
-
-            predictions.append(pred)
+            result = self.full_pipeline.run(review)
             total_time += time.time() - start_time
 
-        metrics = self._compute_metrics(predictions, true_labels)
+            fusion_pred = result["fusion_output"]["final_predicted_label"]
+            classifier_pred = result["classifier_output"]["predicted_label"]
+
+            final_predictions.append(fusion_pred)
+
+            if fusion_pred == "Uncertain":
+                uncertain_count += 1
+                resolved_predictions.append(classifier_pred)
+            else:
+                resolved_predictions.append(fusion_pred)
+
         avg_time = total_time / len(reviews) if reviews else 0.0
 
-        return {
-            "approach": approach_name,
-            "accuracy": metrics["accuracy"],
-            "precision": metrics["precision"],
-            "recall": metrics["recall"],
-            "f1": metrics["f1"],
+        final_result = {
+            "approach": "Full Pipeline (Final Fusion)",
+            "predictions": final_predictions,
             "avg_time_per_review": avg_time,
             "total_time": total_time,
             "uncertain_count": uncertain_count,
-            "predictions": predictions,
+        }
+
+        resolved_result = {
+            "approach": "Full Pipeline (Resolved)",
+            "predictions": resolved_predictions,
+            "avg_time_per_review": avg_time,
+            "total_time": total_time,
+            "uncertain_count": uncertain_count,
+        }
+
+        return {
+            "final": final_result,
+            "resolved": resolved_result,
         }
 
     def run_full_benchmark(
@@ -122,17 +159,36 @@ class LLMBenchmark:
             f"{sum(1 for l in test_labels if l == 'Human')} Human\n"
         )
 
-        approaches = [
-            "Baseline (Few-Shot Prompt)",
-            "Classifier-Only (No LLM Fusion)",
-            "Full Pipeline (Final Fusion)",
-            "Full Pipeline (Resolved)",
-        ]
+        print("Benchmarking: Baseline (Few-Shot Prompt)")
+        print(f"Processing {len(test_reviews)} reviews...")
+        baseline = self._run_baseline(test_reviews)
 
+        print("\nBenchmarking: Classifier-Only (No LLM Fusion)")
+        print(f"Processing {len(test_reviews)} reviews...")
+        classifier_only = self._run_classifier_only(test_reviews)
+
+        print("\nBenchmarking: Full Pipeline (Final Fusion + Resolved from same runs)")
+        print(f"Processing {len(test_reviews)} reviews...")
+        full_pipeline = self._run_full_pipeline_once(test_reviews)
+        final_fusion = full_pipeline["final"]
+        resolved = full_pipeline["resolved"]
+
+        raw_results = [baseline, classifier_only, final_fusion, resolved]
         results = []
-        for approach in approaches:
-            result = self.benchmark_approach(approach, test_reviews, test_labels)
-            results.append(result)
+
+        for r in raw_results:
+            metrics = self._compute_metrics(r["predictions"], test_labels)
+            results.append({
+                "approach": r["approach"],
+                "accuracy": metrics["accuracy"],
+                "precision": metrics["precision"],
+                "recall": metrics["recall"],
+                "f1": metrics["f1"],
+                "avg_time_per_review": r["avg_time_per_review"],
+                "total_time": r["total_time"],
+                "uncertain_count": r["uncertain_count"],
+                "predictions": r["predictions"],
+            })
 
         winner = max(results, key=lambda x: x["f1"])["approach"] if results else None
 
@@ -212,7 +268,6 @@ class LLMBenchmark:
             print("-" * 120)
             true_labels = benchmark_results["true_labels"]
             reviews = benchmark_results["test_reviews"]
-
             pred_lookup = {r["approach"]: r["predictions"] for r in results}
 
             for i, (review, true_label) in enumerate(zip(reviews, true_labels), start=1):
@@ -221,7 +276,7 @@ class LLMBenchmark:
                 print(f"Review:   {review_short}")
                 print(f"True:     {true_label}")
                 for approach_name, preds in pred_lookup.items():
-                    print(f"{approach_name:<36} {preds[i-1]}")
+                    print(f"{approach_name:<36} {preds[i - 1]}")
 
     @staticmethod
     def benchmark_from_dataframe(
@@ -255,7 +310,6 @@ if __name__ == "__main__":
         print("ERROR: Please set OPENAI_API_KEY")
         raise SystemExit(1)
 
-    # Small smoke-test benchmark only
     test_reviews = [
         "stayed here last week. wifi terrible. breakfast meh but location good",
         "This establishment exceeded all expectations with impeccable service.",
