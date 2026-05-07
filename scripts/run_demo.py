@@ -1,8 +1,25 @@
 from __future__ import annotations
 
 import json
+import os
+from datetime import datetime
 
 from src.pipeline import ReviewDetectionPipeline
+
+
+OUTPUT_PATH = "outputs/demo_runs.json"
+
+
+def save_result(result: dict, output_path: str = OUTPUT_PATH) -> None:
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    record = {
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "result": result,
+    }
+
+    with open(output_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
 def main() -> None:
@@ -40,6 +57,10 @@ def main() -> None:
     print("\n" + "=" * 100)
     print("FINAL SUMMARY")
     print("=" * 100)
+    print("Review:")
+    print(review_text)
+    print()
+
     classifier_output = result["classifier_output"]
     linguistic_analysis = result["linguistic_analysis"]
     fusion_output = result["fusion_output"]
@@ -60,6 +81,9 @@ def main() -> None:
     print("Agreement status:", fusion_output["agreement_status"])
     print("Final explanation:", fusion_output["final_explanation"])
     print("=" * 100)
+
+    save_result(result, OUTPUT_PATH)
+    print(f"\nSaved demo run to: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
