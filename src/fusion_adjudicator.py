@@ -62,7 +62,8 @@ Rules:
 - Do not ignore the classifier output
 - Do not ignore the linguistic analysis
 - Respect the forced guidance fields below
-- If the evidence strongly conflicts, the final label should be Uncertain
+- Only output Uncertain if the evidence truly conflicts or remains genuinely borderline
+- If the classifier evidence is very strong and the linguistic evidence is only mildly mixed, do not overrule it
 - The explanation must reference both classifier evidence and linguistic evidence
 - Return valid JSON only
 - Do not include markdown fences
@@ -160,6 +161,13 @@ class FusionAdjudicator:
             and personal == "strong"
             and messiness in {"moderate", "high"}
             and templated == "low"
+            and flow == "natural"
+        )
+
+        moderately_human_linguistics = (
+            specificity == "concrete"
+            and templated == "low"
+            and tone in {"casual", "mixed"}
         )
 
         strongly_ai_linguistics = (
@@ -176,40 +184,65 @@ class FusionAdjudicator:
         forced_uncertainty_band = "uncertain"
         rule_notes = []
 
-        if clf_label == "AI" and clf_prob >= 0.90 and strongly_human_linguistics:
+        # Strong disagreement only when classifier is extremely confident
+        # and linguistic evidence is strongly opposite.
+        if clf_label == "AI" and clf_prob >= 0.95 and strongly_human_linguistics:
             forced_agreement_status = "disagree"
             forced_final_label = "Uncertain"
             forced_uncertainty_band = "uncertain"
             rule_notes.append(
-                "Classifier is highly confident AI, but linguistic analysis shows strong human signals."
+                "Classifier is extremely confident AI, but linguistic analysis shows strong human signals."
             )
-        elif clf_label == "Human" and clf_prob <= 0.10 and strongly_ai_linguistics:
+
+        elif clf_label == "Human" and clf_prob <= 0.05 and strongly_ai_linguistics:
             forced_agreement_status = "disagree"
             forced_final_label = "Uncertain"
             forced_uncertainty_band = "uncertain"
             rule_notes.append(
-                "Classifier is highly confident Human, but linguistic analysis shows strong AI signals."
+                "Classifier is extremely confident Human, but linguistic analysis shows strong AI signals."
             )
-        elif clf_label == "AI" and strongly_ai_linguistics:
+
+        # Strong agreement
+        elif clf_label == "AI" and clf_prob >= 0.75 and strongly_ai_linguistics:
             forced_agreement_status = "agree"
             forced_final_label = "AI"
             forced_uncertainty_band = "likely AI-generated"
             rule_notes.append(
                 "Classifier and linguistic analysis both support AI authorship."
             )
-        elif clf_label == "Human" and strongly_human_linguistics:
+
+        elif clf_label == "Human" and clf_prob <= 0.25 and strongly_human_linguistics:
             forced_agreement_status = "agree"
             forced_final_label = "Human"
             forced_uncertainty_band = "likely human-written"
             rule_notes.append(
                 "Classifier and linguistic analysis both support human authorship."
             )
+
+        # Mildly mixed: stay with classifier if classifier is strong enough
+        elif clf_label == "AI" and clf_prob >= 0.80 and moderately_human_linguistics:
+            forced_agreement_status = "mixed"
+            forced_final_label = "AI"
+            forced_uncertainty_band = "likely AI-generated"
+            rule_notes.append(
+                "Classifier strongly supports AI, while linguistic evidence is only moderately human-like."
+            )
+
+        elif clf_label == "Human" and clf_prob <= 0.20 and not strongly_ai_linguistics:
+            forced_agreement_status = "mixed"
+            forced_final_label = "Human"
+            forced_uncertainty_band = "likely human-written"
+            rule_notes.append(
+                "Classifier strongly supports Human, and linguistic evidence does not strongly contradict it."
+            )
+
+        # True borderline zone
         else:
             forced_agreement_status = "mixed"
             forced_final_label = "Uncertain"
             forced_uncertainty_band = "uncertain"
             rule_notes.append(
-                "Evidence is mixed, so the final decision should remain cautious."
+                "Evidence is genuinely mixed or borderline, so the final decision should remain cautious."
             )
 
         return {
