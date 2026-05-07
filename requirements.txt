@@ -1,7 +1,7 @@
 # LangChain and LLM APIs
 langchain==0.3.25
-langchain-core==0.3.58
-langchain-openai==0.3.0
+langchain-core==0.3.65
+langchain-openai==0.3.19
 langchain-community==0.3.25
 openai>=1.0.0
 
