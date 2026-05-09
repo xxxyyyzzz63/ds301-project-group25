@@ -1,35 +1,228 @@
-# AI-Generated Hotel Review Detector
+# Hybrid AI-Generated Hotel Review Auditing Framework
 
 **Course**: DS-UA 301 - Advanced Topics in Data Science (NYU Spring 2025)  
 **Team**: Wendy, Wency, Yujia
 
-## Overview
-This project studies whether a stylometry-based, feature-driven detector can distinguish AI-generated hotel reviews from human-written reviews more reliably and transparently than a single-pass prompting-only LLM baseline. The final system is organized as a multi-step pipeline: a review is converted into stylometric features, scored by a trained classifier, calibrated into a 0 to 100 AI-likeness score, and paired with a short explanation grounded in the extracted features.
+# Overview
+This project studies whether a hybrid multi-stage framework can distinguish AI-generated hotel reviews from human-written reviews more reliably and transparently than a single-pass prompting-only baseline.
 
-Across the project, we first built a prompting-only baseline, then trained stylometry-based classifiers, then added calibration and explanation generation, and finally updated the pipeline using a more diversified AI-generated review dataset. The final repository therefore preserves both the earlier milestone notebooks and the updated final detector artifacts.
+The final system combines:
 
-## Research Question
-Can a stylometry-based, feature-driven detector with structured outputs provide more reliable AI-vs-human hotel review detection and clearer evidence-based explanations than a single-pass prompting-only LLM baseline?
+- LLM-based linguistic analysis
+- stylometric feature extraction
+- statistical machine learning classification
+- fusion-based adjudication
+- robustness and attribution analysis
 
-## Final Project Status
+Rather than acting as a simple binary detector, the framework is designed to provide:
+
+- interpretable reasoning
+- calibrated AI-likeness scoring
+- uncertainty estimation
+- disagreement analysis
+- robustness validation
+- dataset shortcut auditing
+
+The repository preserves both:
+
+- earlier milestone notebooks documenting project evolution
+- the redesigned final framework implemented as reusable Python modules and scripts
+
+# Research Question
+Can a hybrid multi-stage framework combining LLM-based linguistic reasoning and stylometric machine learning provide more reliable and interpretable AI-vs-human hotel review detection than a prompting-only baseline?
+
+# System Architecture 
+
+The final framework is organized into three layers. 
+
+## Layer 1: Primary Pipeline 
+
+Review 
+→ LLM Linguistic Analyzer 
+→ Stylometric ML Classifier 
+→ Fusion Adjudicator 
+→ Final Decision 
+
+This layer combines semantic reasoning with statistical stylometric detection. 
+
+---
+
+## Layer 2: Analysis & Validation 
+
+The framework includes several analysis components designed to evaluate reliability and interpretability: 
+
+- Attribution Analyzer 
+Examines which stylometric features most strongly influence predictions. 
+
+- Disagreement Analyzer 
+Identifies cases where different system components disagree. 
+
+- Component Validator 
+Evaluates consistency and reliability of LLM-based analysis modules. 
+
+- Benchmark Suite 
+Compares the hybrid system against simpler baselines. 
+
+- Prompt Framework Documentation
+ Documents prompt structures and reasoning workflows used in the LLM stages. 
+
+---
+
+## Layer 3: Integration 
+The final layer integrates: 
+
+- reusable scripts 
+- saved model artifacts 
+- evaluation outputs 
+- demo workflows 
+- analysis notebooks 
+
+into a unified experimental framework.
+
+
+
+# Final Project Status
+
+ The repository now includes: 
+ 
+ - the original prompting-only baseline detector 
+ - stylometry-based ML classifiers 
+ - calibrated AI-likeness scoring 
+ - explanation-chain workflows 
+ - diversified AI review datasets 
+ - reusable modular Python components 
+ - robustness and audit notebooks 
+ - disagreement and attribution analysis 
+ - stress testing and failure-case analysis 
+ - benchmark and validation scripts 
+ 
+ The diversified-data update made the classification task substantially harder for logistic regression, while the final selected random forest model still performed extremely strongly. 
+ 
+ However, additional robustness analysis revealed that some human-written reviews can still be misclassified as strongly AI-generated, suggesting that residual stylometric shortcuts or synthetic dataset artifacts may remain.
+
+# Hybrid AI-Generated Hotel Review Auditing Framework
+
+**Course**: DS-UA 301 - Advanced Topics in Data Science (NYU Spring 2025)
+**Team**: Wendy, Wency, Yujia
+
+---
+
+# Overview
+
+This project studies whether a hybrid multi-stage framework can distinguish AI-generated hotel reviews from human-written reviews more reliably and transparently than a single-pass prompting-only baseline.
+
+The final system combines:
+
+* LLM-based linguistic analysis
+* stylometric feature extraction
+* statistical machine learning classification
+* fusion-based adjudication
+* robustness and attribution analysis
+
+Rather than acting as a simple binary detector, the framework is designed to provide:
+
+* interpretable reasoning
+* calibrated AI-likeness scoring
+* uncertainty estimation
+* disagreement analysis
+* robustness validation
+* dataset shortcut auditing
+
+The repository preserves both:
+
+* earlier milestone notebooks documenting project evolution
+* the redesigned final framework implemented as reusable Python modules and scripts
+
+---
+
+# Research Question
+
+Can a hybrid multi-stage framework combining LLM-based linguistic reasoning and stylometric machine learning provide more reliable and interpretable AI-vs-human hotel review detection than a prompting-only baseline?
+
+---
+
+# System Architecture
+
+The final framework is organized into three layers.
+
+## Layer 1: Primary Pipeline
+
+Review
+→ LLM Linguistic Analyzer
+→ Stylometric ML Classifier
+→ Fusion Adjudicator
+→ Final Decision
+
+This layer combines semantic reasoning with statistical stylometric detection.
+
+---
+
+## Layer 2: Analysis & Validation
+
+The framework includes several analysis components designed to evaluate reliability and interpretability:
+
+* Attribution Analyzer
+  Examines which stylometric features most strongly influence predictions.
+
+* Disagreement Analyzer
+  Identifies cases where different system components disagree.
+
+* Component Validator
+  Evaluates consistency and reliability of LLM-based analysis modules.
+
+* Benchmark Suite
+  Compares the hybrid system against simpler baselines.
+
+* Prompt Framework Documentation
+  Documents prompt structures and reasoning workflows used in the LLM stages.
+
+---
+
+## Layer 3: Integration
+
+The final layer integrates:
+
+* reusable scripts
+* saved model artifacts
+* evaluation outputs
+* demo workflows
+* analysis notebooks
+
+into a unified experimental framework.
+
+---
+
+# Final Project Status
+
 The repository now includes:
 
-- the Week 2 prompting-only baseline
-- the Week 3 stylometry-based classifier artifacts
-- the integrated Week 4 explanation-chain style detector workflow
-- the Week 5 evaluation and subgroup analysis
-- an updated final detector based on a more diversified AI review dataset
-- a reusable Python detector module for testing chat-style review inputs
-- an end-to-end demo notebook
+* the original prompting-only baseline detector
+* stylometry-based ML classifiers
+* calibrated AI-likeness scoring
+* explanation-chain workflows
+* diversified AI review datasets
+* reusable modular Python components
+* robustness and audit notebooks
+* disagreement and attribution analysis
+* stress testing and failure-case analysis
+* benchmark and validation scripts
 
-The diversified-data update made the task somewhat harder for logistic regression, but the final selected random forest model still performed extremely strongly, so results should still be interpreted with caution because residual synthetic cues may remain in the AI dataset.
+The diversified-data update made the classification task substantially harder for logistic regression, while the final selected random forest model still performed extremely strongly.
 
-## Repository Structure
+However, additional robustness analysis revealed that some human-written reviews can still be misclassified as strongly AI-generated, suggesting that residual stylometric shortcuts or synthetic dataset artifacts may remain.
+
+---
+
+# Repository Structure
+
 ```text
 ds301-project-group25/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+│
+├── data/
+│   └── ai_generated_tripadvisor_reviews_openai_diverse.csv
 │
 ├── models/
 │   ├── baseline_results.pkl
@@ -39,76 +232,296 @@ ds301-project-group25/
 │   ├── rf_temp_scaler.pkl
 │   ├── week3_artifacts.pkl
 │   ├── diverse_week5_artifacts.pkl
-│   └── updated_week4_week5_outputs.pkl
+│   ├── updated_week4_week5_outputs.pkl
 │   ├── subgroup_analysis_outputs.pkl
-│   └── dataset_audit_outputs.pkl
-│   └── casing_ood_experiment_outputs.pkl
+│   ├── dataset_audit_outputs.pkl
+│   ├── casing_ood_experiment_outputs.pkl
+│   ├── week4_explanation_chain_metadata.pkl
+│   ├── week5_outputs.pkl
+│   └── week5_audit_outputs.pkl
 │
 ├── notebooks/
 │   ├── AI_Review_Detector_Week1_3_Complete.ipynb
 │   ├── ai_review_generation_and_eda.ipynb
 │   ├── data_preparation.ipynb
 │   ├── evaluate_baseline.ipynb
+│   ├── week4_week5_explanation_chain_and_audit.ipynb
+│   ├── week4_week5_updated_with_diverse_data.ipynb
 │   ├── subgroup_analysis_by_length.ipynb
 │   ├── dataset_audit_and_shortcut_analysis.ipynb
-│   ├── week4_week5_updated_with_diverse_data.ipynb
-│   ├── detector_sanity_check.ipynb
 │   ├── casing_ood_experiment.ipynb
+│   ├── borderline_analysis.ipynb
+│   ├── stress_test.ipynb
+│   ├── detector_sanity_check.ipynb
 │   └── final_demo.ipynb
 │
 ├── src/
-│   ├── baseline_detector.py
+│   ├── __init__.py
+│   ├── pipeline.py
+│   ├── llm_linguistic_analyzer.py
 │   ├── stylometry_features.py
-│   └── final_detector.py
+│   ├── final_detector.py
+│   ├── fusion_adjudicator.py
+│   ├── attribution_analyzer.py
+│   ├── disagreement_analyzer.py
+│   ├── llm_component_validator.py
+│   ├── benchmark.py
+│   ├── baseline_detector.py
+│   ├── prompt_engineering_docs.py
+│   ├── test_ai_and_human.py
+│   └── test_final_detector.py
 │
-└── Data files (not uploaded to GitHub):
-    ├── tripadvisor_hotel_reviews.csv
-    ├── ai_generated_tripadvisor_reviews_gemma3_4b.csv
-    └── ai_generated_tripadvisor_reviews_openai_diverse.csv
+├── scripts/
+│   ├── run_demo.py
+│   ├── run_benchmark.py
+│   ├── run_attribution_analysis.py
+│   ├── run_disagreement_analysis.py
+│   ├── run_component_validation.py
+│   └── run_prompt_framework.py
+│
+└── External data files (not uploaded to GitHub):
+    └── tripadvisor_hotel_reviews.csv
 ```
 
-## Setup Instructions:
-1. Clone this repository.
-2. Install dependencies: pip install -r requirements.txt
-3. Download the dataset files separately and place them in your working directory:
-- tripadvisor_hotel_reviews.csv
-- ai_generated_tripadvisor_reviews_gemma3_4b.csv
-4. Set your API key as an environment variable or notebook secret, depending on how you are running the code.
+---
 
-## Notebooks
-- notebooks/ai_review_generation_and_eda.ipynb: Generates AI reviews and produces exploratory analysis used in the proposal-stage workflow.
-- notebooks/AI_Review_Detector_Week1_3_Complete.ipynb: Main Weeks 1 to 3 implementation notebook, including feature engineering, classifier training, and saved model artifacts.
-- notebooks/data_preparation.ipynb: Dataset cleaning and preprocessing notebook.
-- notebooks/evaluate_baseline.ipynb: Week 2 prompting-only baseline evaluation notebook.
-- notebooks/week4_week5_updated_with_diverse_data.ipynb: Updated Week 4 to 5 notebook that loads the final diversified-data artifact, reruns the explanation-chain demo, and reports updated evaluation and subgroup analysis.
-- notebooks/detector_sanity_check.ipynb: Simple end-to-end detector loading and testing notebook for final integration checks.
-- notebooks/subgroup_analysis_by_length.ipynb: Splits the test set into short/long reviews and reports per-subgroup classification metrics, calibration quality, and uncertain-band activation from pre-saved predictions.
-- notebooks/dataset_audit_and_shortcut_analysis.ipynb: Audits train/val/test leakage, AI boilerplate prefixes, and probability saturation to responsibly interpret the perfect F1 score flagged in Milestone 2.
-- notebooks/casing_ood_experiment.ipynb: Quantifies the casing OOD failure through three sub-experiments, lowercasing AI reviews, sentence-casing human reviews, and stepwise transformation attribution, to pinpoint which preprocessing operation drives the misclassification.
-- notebooks/final_demo.ipynb: End-to-end demo running the final detector on seven curated reviews covering key edge cases.
+# Setup Instructions
 
+1. Clone the repository.
 
-## Source Code
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Download the external dataset separately and place it in the project root:
+
+* `tripadvisor_hotel_reviews.csv`
+
+4. Configure your OpenAI API key:
+
+For notebook usage:
+
+* set the key through Colab secrets or environment variables
+
+For local usage:
+
+* create an environment variable named:
+
+```bash
+OPENAI_API_KEY
+```
+
+---
+
+# Core Pipeline Components
+
+## Primary Pipeline
+
+### `src/pipeline.py`
+
+Main orchestration pipeline connecting all framework stages.
+
+### `src/llm_linguistic_analyzer.py`
+
+Performs semantic and linguistic analysis using an LLM.
+
+### `src/stylometry_features.py`
+
+Extracts stylometric and statistical writing features from reviews.
+
+### `src/final_detector.py`
+
+Loads trained classifiers and calibration artifacts to produce structured predictions.
+
+### `src/fusion_adjudicator.py`
+
+Combines outputs from semantic analysis and stylometric classification into a final decision.
+
+---
+
+# Analysis & Validation Modules
+
+### `src/attribution_analyzer.py`
+
+Analyzes which features contribute most strongly to predictions.
+
+### `src/disagreement_analyzer.py`
+
+Studies disagreement and instability between different pipeline components.
+
+### `src/llm_component_validator.py`
+
+Validates consistency and reliability of LLM-generated outputs.
+
+### `src/benchmark.py`
+
+Runs benchmark comparisons against simpler baselines.
+
+### `src/prompt_engineering_docs.py`
+
+Documents and organizes prompt frameworks used throughout the system.
+
+---
+
+# Supporting Modules
+
+### `src/baseline_detector.py`
+
+Earlier prompting-only baseline system.
+
+### `src/test_final_detector.py`
+
+Basic detector integration tests.
+
+### `src/test_ai_and_human.py`
+
+Runs curated AI/human review examples through the final pipeline.
+
+---
+
+# Scripts
+
+### `scripts/run_demo.py`
+
+Runs the end-to-end framework demo.
+
+### `scripts/run_benchmark.py`
+
+Executes benchmark comparisons across systems.
+
+### `scripts/run_attribution_analysis.py`
+
+Runs attribution analysis workflows.
+
+### `scripts/run_disagreement_analysis.py`
+
+Runs disagreement and failure-case analysis.
+
+### `scripts/run_component_validation.py`
+
+Evaluates LLM component reliability.
+
+### `scripts/run_prompt_framework.py`
+
+Runs prompt-engineering framework demonstrations.
+
+---
+
+# Notebooks
+
+## Development & Training
+
+* `AI_Review_Detector_Week1_3_Complete.ipynb`
+  Weeks 1–3 implementation notebook containing feature engineering, model training, calibration, and saved artifacts.
+
+* `data_preparation.ipynb`
+  Dataset cleaning and preprocessing workflow.
+
+* `ai_review_generation_and_eda.ipynb`
+  AI review generation and exploratory analysis notebook.
+
+---
+
+## Evaluation & Analysis
+
+* `week4_week5_explanation_chain_and_audit.ipynb`
+  Integrated explanation-chain workflow and auditing experiments.
+
+* `week4_week5_updated_with_diverse_data.ipynb`
+  Final diversified-data evaluation notebook.
+
+* `subgroup_analysis_by_length.ipynb`
+  Performance analysis across review-length subgroups.
+
+* `dataset_audit_and_shortcut_analysis.ipynb`
+  Investigates dataset leakage, shortcut learning, and probability saturation.
+
+* `borderline_analysis.ipynb`
+  Examines predictions near the decision boundary and compares them against highly confident predictions.
+
+* `stress_test.ipynb`
+  Manual robustness testing using curated edge-case hotel reviews, including short, polished, messy, ambiguous, and neutral examples.
+
+* `casing_ood_experiment.ipynb`
+  Studies casing-based out-of-distribution failures and preprocessing sensitivity.
+
+---
+
+## Demo & Integration
+
+* `detector_sanity_check.ipynb`
+  Simple end-to-end loading and integration checks.
+
+* `final_demo.ipynb`
+  End-to-end framework demo using curated review examples.
+
+---
+
+# Model Artifacts
+
+The repository preserves both earlier milestone artifacts and updated final-system artifacts.
+
+Key files include:
+
+* `diverse_week5_artifacts.pkl`
+  Main final detector artifact.
+
+* `updated_week4_week5_outputs.pkl`
+  Saved predictions and evaluation outputs for the updated final system.
+
+* `subgroup_analysis_outputs.pkl`
+  Saved subgroup evaluation tables and uncertainty metrics.
+
+* `dataset_audit_outputs.pkl`
+  Outputs from leakage and shortcut-learning audits.
+
+* `casing_ood_experiment_outputs.pkl`
+  Outputs from casing sensitivity experiments.
+
+---
+
+# Source Code
 - src/baseline_detector.py: Prompting-only baseline logic from the earlier project stage.
 - src/stylometry_features.py: Stylometric feature extraction utilities.
 - src/final_detector.py: Final detector interface that loads the saved artifact and returns structured prediction outputs.
 
-## Model Artifacts
-The repository keeps both earlier and final artifacts:
-- earlier milestone artifacts are preserved to document project development
-- diverse_week5_artifacts.pkl is the main final artifact for the updated detector
-- updated_week4_week5_outputs.pkl stores the updated Week 4 to 5 evaluation outputs
-- subgroup_analysis_outputs.pkl stores the saved tables (per-subgroup metrics, band activation, calibration quality, errors) from the subgroup analysis notebook
-- dataset_audit_outputs.pkl stores the leakage, boilerplate, saturation, and per-opening tables from the audit notebook
-- casing_ood_experiment_outputs.pkl stores the per-review predictions for Experiments A, B and the stepwise attribution table from Experiment C.
+---
 
-## References
-See the project proposal and milestone materials for the full methodology, literature review, planned pipeline design, and evaluation rationale.
+# Robustness & Limitations
 
-## Notes
+Although the final random forest detector achieves near-perfect performance on the current evaluation dataset, additional robustness analysis revealed several important limitations:
 
-- Large CSV data files are not uploaded to GitHub.
-- Model .pkl files are included because later stages of the project load trained classifiers and calibration artifacts directly.
-- Earlier notebooks reflect the original synthetic AI dataset workflow.
-- The updated final detector uses a more diversified AI review dataset created to reduce repetitive generation patterns and make evaluation more realistic.
-- Even in the updated workflow, results should still be interpreted cautiously because synthetic AI reviews may retain residual cues that make them easier to separate than real-world mixed-origin text.
+* polished human-written reviews can sometimes be classified as strongly AI-generated
+* confidence calibration remains imperfect near the decision boundary
+* stylometric shortcuts may still influence predictions
+* synthetic AI datasets may retain residual artifacts
+
+To better understand these issues, the repository includes:
+
+* stress testing
+* subgroup analysis
+* borderline prediction analysis
+* disagreement analysis
+* shortcut auditing
+* OOD casing experiments
+
+These analyses are included to encourage responsible interpretation of detector performance rather than relying solely on aggregate metrics such as accuracy or F1 score.
+
+---
+
+# References
+
+See the project proposal, milestone reports, and course materials for the full methodology, literature review, benchmark rationale, and experimental design.
+
+---
+
+# Notes
+
+* Large human-review datasets are not uploaded to GitHub.
+* Earlier notebooks are preserved to document the evolution of the project.
+* Model `.pkl` artifacts are included because later framework stages load pretrained classifiers directly.
+* The updated detector uses a more diversified AI review dataset designed to reduce repetitive generation patterns.
+* Even with diversified data, synthetic reviews may still contain residual stylistic artifacts that make classification easier than real-world mixed-origin text.
+
